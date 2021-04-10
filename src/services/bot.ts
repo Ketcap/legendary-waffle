@@ -1,7 +1,6 @@
 import { Telegraf } from 'telegraf';
-import * as functions from 'firebase-functions';
 
-import { BASE_FUNCTIONS, REGION, BOT_TOKEN, admin } from './config';
+import { BASE_FUNCTIONS, BOT_TOKEN, admin } from '../config';
 
 const db = admin.firestore();
 const channels = db.collection('channels');
@@ -10,6 +9,11 @@ const bot = new Telegraf(BOT_TOKEN as string);
 
 bot.telegram.setWebhook(`${BASE_FUNCTIONS}/telegramHandler`);
 
+/**
+ * Register user to notification List
+ * Chat id will be saved as unique id
+ * registered column added as true
+ */
 bot.command('register', async (ctx) => {
   const chatId = ctx.message.chat.id;
   const chatRef = channels.doc(`${chatId}`);
@@ -25,6 +29,10 @@ bot.command('register', async (ctx) => {
   ctx.reply('You have been subscribed to notifications');
 });
 
+/**
+ * Un-Register user from the notification List
+ * Chat id will be remain but register value is false
+ */
 bot.command('unregister', async (ctx) => {
   const chatId = ctx.message.chat.id;
   const chatRef = channels.doc(`${chatId}`);
@@ -39,9 +47,14 @@ bot.command('unregister', async (ctx) => {
   ctx.reply('You have been un-subscribed to notifications');
 });
 
+/**
+ * Listing users that are in the db
+ * with their name and register status.
+ */
 bot.command('list', async (ctx) => {
   const snapshot = await channels.get();
   const usernames: string[] = [];
+
   snapshot.forEach((doc) => {
     const data = doc.data();
     usernames.push(`- ${data.from}: ${data.registered ? '✅' : '❌'}`);
@@ -50,6 +63,12 @@ bot.command('list', async (ctx) => {
   ctx.replyWithMarkdown(usernames.join('\n'));
 });
 
+/**
+ * Send message to users as a notification
+ * Users what are regist ered will recieve
+ *
+ * Its broadcast message
+ */
 export const sendNotifications = async (content: string) => {
   const snapshot = await channels.get();
   const users: { id: string; name: string }[] = [];
@@ -62,6 +81,10 @@ export const sendNotifications = async (content: string) => {
       });
     }
   });
+  /**
+   * Map all the messeage sending requests as async
+   * Then call them with promise all to send all
+   */
   const sendMessagePromises = users.map(({ id, name }) => {
     return bot.telegram.sendMessage(
       id,
@@ -73,15 +96,5 @@ export const sendNotifications = async (content: string) => {
   });
   await Promise.all(sendMessagePromises);
 };
-
-export const telegramHandler = functions
-  .region(REGION)
-  .https.onRequest(async (request, response) => {
-    try {
-      await bot.handleUpdate(request.body);
-    } finally {
-      response.status(200).end();
-    }
-  });
 
 export { bot };

@@ -83,26 +83,9 @@ export const groupItems = (items: Item[]) => {
   }, reducerDefault);
 };
 
-const ESCAPE_CHARACTERS = [
-  '_',
-  '*',
-  '[',
-  ']',
-  '(',
-  ')',
-  '~',
-  '`',
-  '>',
-  '#',
-  '+',
-  '-',
-  '=',
-  '|',
-  '{',
-  '}',
-  '.',
-  '!',
-];
+// prettier-ignore
+const ESCAPE_CHARACTERS = ['_','*','[',']','(',')','~','`','>','#','+','-','=','|','{','}','.','!'];
+
 export const escapeCharacters = (a: string) => {
   return ESCAPE_CHARACTERS.reduce((escapingString, cur) => {
     const reg = `\\${cur}`;
