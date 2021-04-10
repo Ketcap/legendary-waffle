@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 
 import { REGION } from '../config';
-import { bot } from './bot';
+import { bot } from '../services/bot';
 
 export const telegramHandler = functions
   .region(REGION)

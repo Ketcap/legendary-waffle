@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 
-import { formatItems, gatherItems, groupItems } from './utils';
-import { sendNotifications } from './bot';
+import { formatItems, gatherItems, groupItems } from '../services/utils';
+import { sendNotifications } from '../services/bot';
 import { REGION } from '../config';
 
 const FIRST_PAGE = 'https://www.akakce.com/fiyati-dusen-urunler/?c=1053';

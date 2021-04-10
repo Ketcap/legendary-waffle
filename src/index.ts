@@ -1,2 +1,2 @@
-export { priceCheck } from './services/priceCheck';
-export { telegramHandler } from './services/telegram';
+export { priceCheck } from './functions/priceCheck';
+export { telegramHandler } from './functions/telegram';
