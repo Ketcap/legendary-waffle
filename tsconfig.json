@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["ES2019", "esnext.asynciterable"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "noUnusedLocals": false,
+    "outDir": "lib",
+    "target": "es6",
+    "strict": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "sourceMap": true,
+    "skipLibCheck": true
+  },
+  "compileOnSave": true,
+  "include": [
+    "src"
+  ]
+}
