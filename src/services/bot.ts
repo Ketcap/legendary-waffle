@@ -1,9 +1,13 @@
 import { Telegraf } from 'telegraf';
 
-import { BASE_FUNCTIONS, BOT_TOKEN, admin } from '../config';
-
-const db = admin.firestore();
-const channels = db.collection('channels');
+import { BASE_FUNCTIONS, BOT_TOKEN } from '../config';
+import {
+  createDocument,
+  getDocWithId,
+  getListFromTable,
+  Tables,
+  updateDocument,
+} from './firestore';
 
 const bot = new Telegraf(BOT_TOKEN as string);
 
@@ -15,16 +19,16 @@ bot.telegram.setWebhook(`${BASE_FUNCTIONS}/telegramHandler`);
  * registered column added as true
  */
 bot.command('register', async (ctx) => {
-  const chatId = ctx.message.chat.id;
-  const chatRef = channels.doc(`${chatId}`);
-  const chatDoc = await chatRef.get();
-  if (chatDoc.data()?.registered) {
+  const { id } = ctx.message.chat;
+  const document = await getDocWithId(Tables.channels, `${id}`);
+  if (document?.registered) {
     ctx.reply(`You are already registered for notification`);
     return;
   }
-  await chatRef.set({
+  await createDocument(Tables.channels, {
+    id: `${id}`,
     registered: true,
-    from: ctx.message.from.username ?? '',
+    name: ctx.message.from.username ?? '',
   });
   ctx.reply('You have been subscribed to notifications');
 });
@@ -34,16 +38,16 @@ bot.command('register', async (ctx) => {
  * Chat id will be remain but register value is false
  */
 bot.command('unregister', async (ctx) => {
-  const chatId = ctx.message.chat.id;
-  const chatRef = channels.doc(`${chatId}`);
-  const chatDoc = await chatRef.get();
-  if (!chatDoc.exists || !chatDoc.data()?.registered) {
+  const { id } = ctx.message.chat;
+  const document = await getDocWithId(Tables.channels, `${id}`);
+  if (!document || document.registered) {
     ctx.reply(`You are not registered notification`);
     return;
   }
-  await chatRef.update({
+  await updateDocument(Tables.channels, `${id}`, {
     registered: false,
   });
+
   ctx.reply('You have been un-subscribed to notifications');
 });
 
@@ -52,15 +56,12 @@ bot.command('unregister', async (ctx) => {
  * with their name and register status.
  */
 bot.command('list', async (ctx) => {
-  const snapshot = await channels.get();
-  const usernames: string[] = [];
+  const documents = await getListFromTable(Tables.channels);
+  const usernames = documents
+    .map((data) => `- ${data.name}: ${data.registered ? '✅' : '❌'}`)
+    .join('\n');
 
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-    usernames.push(`- ${data.from}: ${data.registered ? '✅' : '❌'}`);
-  });
-
-  ctx.replyWithMarkdown(usernames.join('\n'));
+  ctx.replyWithMarkdown(usernames);
 });
 
 /**
@@ -70,14 +71,14 @@ bot.command('list', async (ctx) => {
  * Its broadcast message
  */
 export const sendNotifications = async (content: string) => {
-  const snapshot = await channels.get();
+  const documents = await getListFromTable(Tables.channels);
   const users: { id: string; name: string }[] = [];
-  snapshot.forEach((doc) => {
-    const data = doc.data();
+
+  documents.forEach((data) => {
     if (data.registered) {
       users.push({
-        id: doc.id,
-        name: data.from,
+        id: data.id,
+        name: data.name,
       });
     }
   });
