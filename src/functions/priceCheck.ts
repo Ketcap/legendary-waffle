@@ -19,12 +19,15 @@ export const priceCheckSchedule = functions
     return null;
   });
 
-export const priceCheck = functions.https.onRequest(async (_, resp) => {
-  const items = await gatherItems(FIRST_PAGE, []);
-  const groupedItems = groupItems(items);
-  const formattedItems = formatItems(groupedItems);
-  await sendNotifications(formattedItems);
-  resp.json({
-    status: 'successfull',
+export const priceCheck = functions
+  // prettier-ignore
+  .region(REGION)
+  .https.onRequest(async (_, resp) => {
+    const items = await gatherItems(FIRST_PAGE, []);
+    const groupedItems = groupItems(items);
+    const formattedItems = formatItems(groupedItems);
+    await sendNotifications(formattedItems);
+    resp.json({
+      status: 'successfull',
+    });
   });
-});
